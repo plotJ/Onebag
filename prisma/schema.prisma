@@ -1,0 +1,68 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Backpack {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  slug               String   @unique
+  link               String? 
+  image              String?
+  price              Float?
+  volume             Float?
+  openingType        String?
+  carryOnCompliance  Float
+  weightToVolume     String?
+  heightCm           Float?
+  widthCm            Float?
+  depthCm            Float?
+  weightKg           Float?
+  heightIn           Float?
+  widthIn            Float?
+  depthIn            Float?
+  weightLb           Float?
+  compartments       Int?
+  laptopSize         String?
+  laptopAccess       String?
+  passport           String?
+  waterBottle        String?
+  organizer          String?
+  shoe               String?
+  hydration          String?
+  aesthetic          String?
+  expands            Boolean?
+  expandedVolume     Float?   
+  compression        Int?
+  frame              String?
+  waterResist        Boolean?
+  rainfly            Boolean?
+  molle              String?
+  selfStand          Boolean?
+  lashPoints         Int?
+  backpack           Boolean?
+  shoulder           Boolean?
+  hipBelt            String?
+  sternum            String?
+  loadLifters        Boolean?
+  handles            Int?
+  passThrough        Boolean?
+  material           String?
+  notes              String?
+  verified           String?
+  discontinued       Boolean?
+  airlineCompatibilities AirlineCompatibility[]
+}
+
+model AirlineCompatibility {
+  backpackId String
+  airlineName String
+  isCompatible Boolean
+  backpack    Backpack @relation(fields: [backpackId], references: [id])
+
+  @@id([backpackId, airlineName])
+}
