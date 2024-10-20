@@ -1,5 +1,3 @@
-// app/backpack/[slug]/page.tsx
-
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
@@ -12,11 +10,19 @@ import {
   Grid,
   DoorOpen,
   Palette,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import Image from 'next/image';
 
 interface AirlineCompatibility {
@@ -57,117 +63,100 @@ export default async function BackpackPage({
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <Image
-            src={backpack.image || placeholderImage}
-            alt={backpack.name}
-            width={500} // Adjust the width
-            height={500} // Adjust the height
-            placeholder="blur" // Optional: add placeholder
-            blurDataURL={placeholderImage} // Optional: add blur placeholder
-            className="w-full h-auto object-cover rounded-md"
-          />
-          <div className="bg-primary text-primary-foreground p-4 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-2">Airline Compatibility Score</h2>
-            <Progress value={backpack.carryOnCompliance} className="h-4 mb-2" />
-            <p className="text-3xl font-bold">{backpack.carryOnCompliance}%</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="relative group">
+            <Image
+              src={backpack.image || placeholderImage}
+              alt={backpack.name}
+              width={800}
+              height={800}
+              placeholder="blur"
+              blurDataURL={placeholderImage}
+              className="w-full h-auto object-cover rounded-lg shadow-lg transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <Button variant="secondary" size="lg" className="font-bold">
+                View Larger
+              </Button>
+            </div>
           </div>
+          <Card className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Airline Compatibility Score</h2>
+              <Progress value={backpack.carryOnCompliance} className="h-6 mb-2" />
+              <p className="text-4xl font-bold">{backpack.carryOnCompliance}%</p>
+            </CardContent>
+          </Card>
         </div>
         <div className="space-y-6">
-          <h1 className="text-4xl font-bold">{backpack.name}</h1>
-          <p className="text-3xl font-semibold">
-            ${backpack.price?.toFixed(2) || 'N/A'}
-          </p>
+          <div>
+            <h1 className="text-4xl font-bold mb-2">{backpack.name}</h1>
+            <p className="text-3xl font-semibold text-primary">
+              ${backpack.price?.toFixed(2) || 'N/A'}
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="flex items-center p-4">
-                <Briefcase className="w-6 h-6 mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Volume</p>
-                  <p className="font-semibold">
-                    {backpack.volume ? `${backpack.volume}L` : 'N/A'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center p-4">
-                <Weight className="w-6 h-6 mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Weight</p>
-                  <p className="font-semibold">
-                    {renderMeasurement(backpack.weightKg, backpack.weightLb, 'kg')}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center p-4">
-                <Maximize className="w-6 h-6 mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Dimensions</p>
-                  <p className="font-semibold">
-                    {backpack.heightCm && backpack.widthCm && backpack.depthCm
-                      ? `${backpack.heightCm} x ${backpack.widthCm} x ${backpack.depthCm} cm`
-                      : 'N/A'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center p-4">
-                <Laptop className="w-6 h-6 mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Laptop Size</p>
-                  <p className="font-semibold">{backpack.laptopSize || 'N/A'}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <TooltipProvider>
+              {[
+                { icon: Briefcase, label: 'Volume', value: backpack.volume ? `${backpack.volume}L` : 'N/A' },
+                { icon: Weight, label: 'Weight', value: renderMeasurement(backpack.weightKg, backpack.weightLb, 'kg') },
+                { icon: Maximize, label: 'Dimensions', value: backpack.heightCm && backpack.widthCm && backpack.depthCm ? `${backpack.heightCm} x ${backpack.widthCm} x ${backpack.depthCm} cm` : 'N/A' },
+                { icon: Laptop, label: 'Laptop Size', value: backpack.laptopSize || 'N/A' },
+              ].map((item, index) => (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>
+                    <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                      <CardContent className="flex items-center p-4">
+                        <item.icon className="w-8 h-8 mr-3 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">{item.label}</p>
+                          <p className="font-semibold">{item.value}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View details about {item.label.toLowerCase()}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
           </div>
-          <div className="space-y-2">
-            <p className="flex items-center">
-              <Grid className="w-5 h-5 mr-2" />
-              <span className="font-semibold mr-2">Compartments:</span>
-              {backpack.compartments ?? 'N/A'}
-            </p>
-            <p className="flex items-center">
-              <DoorOpen className="w-5 h-5 mr-2" />
-              <span className="font-semibold mr-2">Opening Type:</span>
-              {backpack.openingType || 'N/A'}
-            </p>
-            <p className="flex items-center">
-              <Star className="w-5 h-5 mr-2" />
-              <span className="font-semibold mr-2">Material:</span>
-              {backpack.material || 'N/A'}
-            </p>
-            <p className="flex items-center">
-              <Palette className="w-5 h-5 mr-2" />
-              <span className="font-semibold mr-2">Aesthetic:</span>
-              {backpack.aesthetic || 'N/A'}
-            </p>
-            {backpack.link && (
-              <Link
-                href={backpack.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                View Product
+          <Card className="bg-secondary">
+            <CardContent className="p-6 space-y-4">
+              {[
+                { icon: Grid, label: 'Compartments', value: backpack.compartments ?? 'N/A' },
+                { icon: DoorOpen, label: 'Opening Type', value: backpack.openingType || 'N/A' },
+                { icon: Star, label: 'Material', value: backpack.material || 'N/A' },
+                { icon: Palette, label: 'Aesthetic', value: backpack.aesthetic || 'N/A' },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <item.icon className="w-6 h-6 text-primary" />
+                  <span className="font-semibold">{item.label}:</span>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          {backpack.link && (
+            <Button asChild className="w-full" size="lg">
+              <Link href={backpack.link} target="_blank" rel="noopener noreferrer">
+                View Product <ExternalLink className="ml-2 h-4 w-4" />
               </Link>
-            )}
-          </div>
+            </Button>
+          )}
         </div>
       </div>
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Airline Compatibility</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="mt-12">
+        <h2 className="text-3xl font-bold mb-6">Airline Compatibility</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {backpack.airlineCompatibilities.map(
             (compatibility: AirlineCompatibility) => (
               <Badge
                 key={compatibility.airlineName}
                 variant={compatibility.isCompatible ? 'default' : 'secondary'}
-                className="text-sm p-2"
+                className="text-sm p-3 flex items-center justify-center"
               >
                 {compatibility.isCompatible ? '✓' : '✗'} {compatibility.airlineName}
               </Badge>
