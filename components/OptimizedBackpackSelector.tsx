@@ -245,7 +245,6 @@ export default function OptimizedBackpackSelector() {
     const rangeValue = isRangeFilter ? (filters[filterKey] as [number, number]) : null;
 
     if (type === "range" && rangeValue) {
-      // Determine step size based on the filter
       let step = 1;
       if (filterKey === "weightRange") {
         step = 0.1;
@@ -257,19 +256,24 @@ export default function OptimizedBackpackSelector() {
         step = 1;
       }
 
+      const max = Math.max(...backpacks.map(b => {
+        const val = (b[filterKey as keyof Backpack] as number) ?? 0;
+        return val;
+      }), rangeValue[1]);
+
       return (
         <div className="mb-4">
           <Label className="mb-2">{name}</Label>
           <div className="space-y-2">
             <Slider
-              value={rangeValue as number[]}
-              max={Math.max(...backpacks.map(b => {
-                const val = (b[filterKey as keyof Backpack] as number) ?? 0;
-                return val;
-              }), rangeValue[1])}
+              value={rangeValue}
+              max={max}
               step={step}
-              onValueChange={(value) => setFilters({ ...filters, [filterKey]: value as [number, number] })}
-              min={rangeValue[0]}
+              onValueChange={(value) => {
+                setFilters(prev => ({ ...prev, [filterKey]: value as [number, number] }));
+              }}
+              min={0}
+              className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{rangeValue[0].toFixed(1)}</span>
