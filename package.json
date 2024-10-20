@@ -8,10 +8,10 @@
     "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
     "seed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/seed.ts"
   },
-  "postinstall": "prisma generate",
   "dependencies": {
     "@prisma/client": "^5.20.0",
     "@radix-ui/react-checkbox": "^1.1.2",
