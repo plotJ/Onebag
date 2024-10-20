@@ -56,7 +56,7 @@ export default function OptimizedBackpackSelector() {
   const [filters, setFilters] = useState({
     brand: 'Any',
     priceRange: [0, 1000] as [number, number],
-    volumeRange: [0, 100] as [number, number],
+    volumeRange: [0, 70] as [number, number],
     dimensions: 'Any',
     weightRange: [0, 10] as [number, number],
     laptopSize: 'Any',
@@ -68,6 +68,8 @@ export default function OptimizedBackpackSelector() {
     pockets: [] as string[],
     airlineCompatibility: 'Any',
   });
+
+  const [defaultFilters, setDefaultFilters] = useState(filters);
 
   // Map display names to filter keys
   const filterKeyMap: { [key: string]: keyof typeof filters } = {
@@ -91,70 +93,6 @@ export default function OptimizedBackpackSelector() {
     router.push(`/backpack/${slug}`)
   }
 
-  useEffect(() => {
-    fetchBackpacks()
-    fetchAirlines()
-  }, [])
-
-  useEffect(() => {
-    setFilteredBackpacks(applyFilters());
-  }, [filters, backpacks, searchTerm, useMetric]);
-
-  useEffect(() => {
-    console.log('Backpacks:', backpacks);
-    console.log('Filtered backpacks:', filteredBackpacks);
-    console.log('Current filters:', filters);
-  }, [backpacks, filteredBackpacks, filters]);
-
-  useEffect(() => {
-    if (backpacks.length > 0) {
-      const maxPrice = Math.max(...backpacks.map(b => b.price ?? 0));
-      const maxVolume = Math.max(...backpacks.map(b => b.volume ?? 0));
-      const maxWeight = Math.max(...backpacks.map(b => (useMetric ? b.weightKg : b.weightLb) ?? 0));
-      const maxCompartments = Math.max(...backpacks.map(b => b.numCompartments ?? 0));
-
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        priceRange: [0, maxPrice] as [number, number],
-        volumeRange: [0, maxVolume] as [number, number],
-        weightRange: [0, maxWeight] as [number, number],
-        compartmentsRange: [0, maxCompartments] as [number, number]
-      }));
-    }
-  }, [backpacks, useMetric]);
-
-  const fetchBackpacks = async () => {
-    setIsLoading(true)
-    try {
-      console.log('Fetching backpacks...')
-      const response = await fetch('/api/backpacks')
-      console.log('Response status:', response.status)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      console.log('Fetched backpacks:', data)
-      setBackpacks(data)
-    } catch (error) {
-      console.error('Error fetching backpacks:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchAirlines = async () => {
-    try {
-      const response = await fetch('/api/airlines')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json() as string[]
-      setAirlines(data)
-    } catch (error) {
-      console.error('Error fetching airlines:', error)
-    }
-  }
-
   const toggleUnits = () => setUseMetric(!useMetric)
 
   const getUniqueValues = <T extends keyof Backpack>(backpacks: Backpack[], key: T): string[] => {
@@ -174,99 +112,7 @@ export default function OptimizedBackpackSelector() {
     return getUniqueValues(backpacks, 'pockets');
   }
 
-  // Updated renderFilter function
-  const renderFilter = (name: string, type: string, options: string[] | null = null) => {
-    const filterKey = filterKeyMap[name] as keyof typeof filters;
-    if (!filterKey) {
-      console.warn(`Filter key for "${name}" not found.`);
-      return null;
-    }
-
-    const isRangeFilter = type === "range";
-    const rangeValue = isRangeFilter ? (filters[filterKey] as [number, number]) : null;
-
-    return (
-      <div className="mb-4">
-        <Label className="mb-2">{name}</Label>
-        {type === "select" && (
-          <Select
-            value={filters[filterKey] as string}
-            onValueChange={(value) => setFilters({ ...filters, [filterKey]: value })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Any" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Any">Any</SelectItem>
-              {options && options.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        {type === "range" && rangeValue && (
-          <div className="space-y-2">
-            <Slider
-              value={rangeValue}
-              max={Math.max(...backpacks.map(b => {
-                const val = (b[filterKey as keyof Backpack] as number) ?? 0;
-                return val;
-              }), rangeValue[1])}
-              step={1}
-              onValueChange={(value) => setFilters({ ...filters, [filterKey]: value })}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{rangeValue[0]}</span>
-              <span>{rangeValue[1]}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  const renderCheckboxGroup = (title: string, options: string[]) => {
-    const filterKey = filterKeyMap[title] as keyof typeof filters;
-
-    if (!filterKey) {
-      console.warn(`Filter key for "${title}" not found.`);
-      return null;
-    }
-
-    return (
-      <div className="mb-4">
-        <h3 className="font-semibold mb-2">{title}</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {options.map((option) => (
-            <div key={option} className="flex items-center space-x-2">
-              <Checkbox
-                id={option}
-                checked={(filters[filterKey] as string[]).includes(option)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setFilters({
-                      ...filters,
-                      [filterKey]: [...(filters[filterKey] as string[]), option]
-                    })
-                  } else {
-                    setFilters({
-                      ...filters,
-                      [filterKey]: (filters[filterKey] as string[]).filter(item => item !== option)
-                    })
-                  }
-                }}
-              />
-              <Label htmlFor={option}>{option}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-
+  // Move applyFilters above useEffect to avoid "Cannot find name 'applyFilters'" error
   const applyFilters = () => {
     return backpacks.filter(backpack => {
       const nameMatch = backpack.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
@@ -312,6 +158,192 @@ export default function OptimizedBackpackSelector() {
 
   const handleSearch = () => {
     setFilteredBackpacks(applyFilters());
+  }
+
+  const resetFilters = () => {
+    setFilters(defaultFilters);
+    setFilteredBackpacks(backpacks);
+  };
+
+  useEffect(() => {
+    fetchBackpacks()
+    fetchAirlines()
+  }, [])
+
+  useEffect(() => {
+    setFilteredBackpacks(applyFilters());
+  }, [filters, backpacks, searchTerm, useMetric]);
+
+  useEffect(() => {
+    console.log('Backpacks:', backpacks);
+    console.log('Filtered backpacks:', filteredBackpacks);
+    console.log('Current filters:', filters);
+  }, [backpacks, filteredBackpacks, filters]);
+
+  useEffect(() => {
+    // Update filters when backpacks data is loaded
+    if (backpacks.length > 0) {
+      const maxPrice = Math.max(...backpacks.map(b => b.price ?? 0));
+      const maxVolume = Math.max(...backpacks.map(b => b.volume ?? 0));
+      const maxWeight = Math.max(...backpacks.map(b => (useMetric ? b.weightKg : b.weightLb) ?? 0));
+      const maxCompartments = Math.max(...backpacks.map(b => b.numCompartments ?? 0));
+
+      const updatedFilters = {
+        ...filters,
+        priceRange: [0, maxPrice] as [number, number],
+        volumeRange: [0, maxVolume] as [number, number],
+        weightRange: [0, maxWeight] as [number, number],
+        compartmentsRange: [0, maxCompartments] as [number, number],
+      };
+
+      setFilters(updatedFilters);
+      setDefaultFilters(updatedFilters);
+    }
+  }, [backpacks, useMetric]);
+
+  const fetchBackpacks = async () => {
+    setIsLoading(true)
+    try {
+      console.log('Fetching backpacks...')
+      const response = await fetch('/api/backpacks')
+      console.log('Response status:', response.status)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      console.log('Fetched backpacks:', data)
+      setBackpacks(data)
+    } catch (error) {
+      console.error('Error fetching backpacks:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchAirlines = async () => {
+    try {
+      const response = await fetch('/api/airlines')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json() as string[]
+      setAirlines(data)
+    } catch (error) {
+      console.error('Error fetching airlines:', error)
+    }
+  }
+
+  // Updated renderFilter function
+  const renderFilter = (name: string, type: string, options: string[] | null = null) => {
+    const filterKey = filterKeyMap[name] as keyof typeof filters;
+    if (!filterKey) {
+      console.warn(`Filter key for "${name}" not found.`);
+      return null;
+    }
+
+    const isRangeFilter = type === "range";
+    const rangeValue = isRangeFilter ? (filters[filterKey] as [number, number]) : null;
+
+    if (type === "range" && rangeValue) {
+      // Determine step size based on the filter
+      let step = 1;
+      if (filterKey === "weightRange") {
+        step = 0.1;
+      } else if (filterKey === "priceRange") {
+        step = 10;
+      } else if (filterKey === "volumeRange") {
+        step = 1;
+      } else if (filterKey === "compartmentsRange") {
+        step = 1;
+      }
+
+      return (
+        <div className="mb-4">
+          <Label className="mb-2">{name}</Label>
+          <div className="space-y-2">
+            <Slider
+              value={rangeValue as number[]}
+              max={Math.max(...backpacks.map(b => {
+                const val = (b[filterKey as keyof Backpack] as number) ?? 0;
+                return val;
+              }), rangeValue[1])}
+              step={step}
+              onValueChange={(value) => setFilters({ ...filters, [filterKey]: value as [number, number] })}
+              min={rangeValue[0]}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{rangeValue[0].toFixed(1)}</span>
+              <span>{rangeValue[1].toFixed(1)}</span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (type === "select") {
+      return (
+        <div className="mb-4">
+          <Label className="mb-2">{name}</Label>
+          <Select
+            value={filters[filterKey] as string}
+            onValueChange={(value) => setFilters({ ...filters, [filterKey]: value })}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Any" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Any">Any</SelectItem>
+              {options && options.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )
+    }
+
+    return null;
+  }
+
+  const renderCheckboxGroup = (title: string, options: string[]) => {
+    const filterKey = filterKeyMap[title] as keyof typeof filters;
+
+    if (!filterKey) {
+      console.warn(`Filter key for "${title}" not found.`);
+      return null;
+    }
+
+    return (
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">{title}</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {options.map((option) => (
+            <div key={option} className="flex items-center space-x-2">
+              <Checkbox
+                id={option}
+                checked={(filters[filterKey] as string[]).includes(option)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setFilters({
+                      ...filters,
+                      [filterKey]: [...(filters[filterKey] as string[]), option]
+                    })
+                  } else {
+                    setFilters({
+                      ...filters,
+                      [filterKey]: (filters[filterKey] as string[]).filter(item => item !== option)
+                    })
+                  }
+                }}
+              />
+              <Label htmlFor={option}>{option}</Label>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   const placeholderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
@@ -369,9 +401,12 @@ export default function OptimizedBackpackSelector() {
               {renderFilter("Airline Compatibility", "select", airlines)}
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex space-x-2">
             <Button className="w-full" onClick={() => setFilteredBackpacks(applyFilters())}>
               Apply Filters
+            </Button>
+            <Button variant="outline" className="w-full" onClick={resetFilters}>
+              Reset Filters
             </Button>
           </CardFooter>
         </Card>
