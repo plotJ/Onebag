@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "migrate:deploy": "prisma migrate deploy",
     "seed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/seed.ts"
   },
   "dependencies": {
