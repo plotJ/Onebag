@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '../../../lib/prisma'
+import { prisma } from '../../../lib/prisma'
 
 type BackpackInput = {
   name: string;
@@ -65,7 +65,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Error fetching backpacks' }, { status: 500 })
   }
 }
-
 
 export async function POST(request: Request) {
   try {
