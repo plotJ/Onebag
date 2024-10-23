@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from 'next/navigation'
-import { Search, Sliders, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, Sliders, ShoppingBag, ChevronDown, ChevronUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface Backpack {
   id: string;
@@ -51,6 +52,8 @@ export default function OptimizedBackpackSelector() {
   const [filteredBackpacks, setFilteredBackpacks] = useState<Backpack[]>([]);
   const [airlines, setAirlines] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null)
+
 
   // Define the filters with correct keys
   const [filters, setFilters] = useState({
@@ -89,9 +92,10 @@ export default function OptimizedBackpackSelector() {
     'Pockets': 'pockets',
   };
 
-  const handleBackpackClick = (slug: string) => {
-    router.push(`/backpack/${slug}`)
+  const handleBackpackClick = (backpack: Backpack) => {
+    setSelectedBackpack(backpack)
   }
+
 
   const toggleUnits = () => setUseMetric(!useMetric)
 
@@ -350,71 +354,11 @@ export default function OptimizedBackpackSelector() {
     )
   }
 
-  const placeholderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
+  const placeholderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
-      <h1 className="text-4xl font-bold text-center">Onebag Backpack Finder Tool</h1>
-
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search backpacks..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button onClick={handleSearch}>Search</Button>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={() => setIsFilterExpanded(!isFilterExpanded)}>
-          <Sliders className="mr-2 h-4 w-4" />
-          {isFilterExpanded ? "Hide Filters" : "Show Filters"}
-          {isFilterExpanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
-        </Button>
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="unit-toggle">Metric</Label>
-          <Switch id="unit-toggle" checked={useMetric} onCheckedChange={toggleUnits} />
-          <Label htmlFor="unit-toggle">Imperial</Label>
-        </div>
-      </div>
-
-      {isFilterExpanded && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Desired Features</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {renderFilter("Brand", "select", getUniqueValues(backpacks, 'brand'))}
-              {renderFilter("Price", "range")}
-              {renderFilter("Volume", "range")}
-              {renderFilter("Weight", "range")}
-              {renderFilter("Dimensions", "select", getUniqueValues(backpacks, 'dimensions'))}
-              {renderFilter("Laptop Size", "select", getUniqueValues(backpacks, 'laptopSize'))}
-              {renderFilter("Number of Compartments", "range")}
-              {renderFilter("Opening Type", "select", getUniqueValues(backpacks, 'openingType'))}
-              {renderFilter("Material", "select", getUniqueValues(backpacks, 'material'))}
-              {renderFilter("Aesthetic", "select", getUniqueValues(backpacks, 'aesthetic'))}
-              {renderCheckboxGroup("Features", getFeatures(backpacks))}
-              {renderCheckboxGroup("Pockets", getPockets(backpacks))}
-              {renderFilter("Airline Compatibility", "select", airlines)}
-            </div>
-          </CardContent>
-          <CardFooter className="flex space-x-2">
-            <Button className="w-full" onClick={() => setFilteredBackpacks(applyFilters())}>
-              Apply Filters
-            </Button>
-            <Button variant="outline" className="w-full" onClick={resetFilters}>
-              Reset Filters
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+      {/* ... (keep all the existing JSX up to the results section) */}
 
       <div>
         <h2 className="text-2xl font-semibold mb-4 flex items-center">
@@ -429,32 +373,94 @@ export default function OptimizedBackpackSelector() {
           filteredBackpacks.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredBackpacks.map((backpack) => (
-                <Card key={backpack.id} onClick={() => handleBackpackClick(backpack.slug)}>
-                  <CardHeader>
-                    <img
-                      src={backpack.image || placeholderImage}
-                      alt={backpack.name}
-                      className="w-full h-48 object-cover rounded-md"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = placeholderImage;
-                      }}
-                    />
-                  </CardHeader>
-                  <CardContent>
-                    <h3 className="font-semibold text-lg mb-2">{backpack.name}</h3>
-                    <p className="text-muted-foreground mb-2">{backpack.volume ?? 'N/A'}L | ${backpack.price ?? 'N/A'}</p>
-                    <p className="text-muted-foreground mb-2">
-                      {useMetric
-                        ? `${backpack.weightKg ? backpack.weightKg.toFixed(2) : 'N/A'} kg | ${backpack.heightCm}x${backpack.widthCm}x${backpack.depthCm} cm`
-                        : `${backpack.weightLb ? backpack.weightLb.toFixed(2) : 'N/A'} lbs | ${backpack.heightIn}x${backpack.widthIn}x${backpack.depthIn} in`
-                      }
-                    </p>
-                    <p className="text-muted-foreground mb-2">Carry-on Compliance: {backpack.carryOnCompliance ?? 'N/A'}%</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full" onClick={() => handleBackpackClick(backpack.slug)}>View Details</Button>
-                  </CardFooter>
-                </Card>
+                <Dialog key={backpack.id}>
+                  <DialogTrigger asChild>
+                    <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="w-full pb-[100%] relative overflow-hidden rounded-md">
+                          <img
+                            src={backpack.image || placeholderImage}
+                            alt={backpack.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = placeholderImage;
+                            }}
+                          />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <h3 className="font-semibold text-lg mb-2">{backpack.name}</h3>
+                        <p className="text-muted-foreground mb-2">{backpack.volume ?? 'N/A'}L | ${backpack.price ?? 'N/A'}</p>
+                        <p className="text-muted-foreground mb-2">
+                          {useMetric
+                            ? `${backpack.weightKg ? backpack.weightKg.toFixed(2) : 'N/A'} kg | ${backpack.heightCm}x${backpack.widthCm}x${backpack.depthCm} cm`
+                            : `${backpack.weightLb ? backpack.weightLb.toFixed(2) : 'N/A'} lbs | ${backpack.heightIn}x${backpack.widthIn}x${backpack.depthIn} in`
+                          }
+                        </p>
+                        <p className="text-muted-foreground mb-2">Carry-on Compliance: {backpack.carryOnCompliance ?? 'N/A'}%</p>
+                      </CardContent>
+                    </Card>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>{backpack.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="w-full pb-[100%] relative overflow-hidden rounded-md">
+                        <img
+                          src={backpack.image || placeholderImage}
+                          alt={backpack.name}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = placeholderImage;
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold mb-2">${backpack.price ?? 'N/A'}</p>
+                        <p className="mb-2">Volume: {backpack.volume ?? 'N/A'}L</p>
+                        <p className="mb-2">
+                          Weight: {useMetric
+                            ? `${backpack.weightKg ? backpack.weightKg.toFixed(2) : 'N/A'} kg`
+                            : `${backpack.weightLb ? backpack.weightLb.toFixed(2) : 'N/A'} lbs`
+                          }
+                        </p>
+                        <p className="mb-2">
+                          Dimensions: {useMetric
+                            ? `${backpack.heightCm}x${backpack.widthCm}x${backpack.depthCm} cm`
+                            : `${backpack.heightIn}x${backpack.widthIn}x${backpack.depthIn} in`
+                          }
+                        </p>
+                        <p className="mb-2">Carry-on Compliance: {backpack.carryOnCompliance ?? 'N/A'}%</p>
+                        <p className="mb-2">Laptop Size: {backpack.laptopSize ?? 'N/A'}</p>
+                        <p className="mb-2">Number of Compartments: {backpack.numCompartments ?? 'N/A'}</p>
+                        <p className="mb-2">Opening Type: {backpack.openingType ?? 'N/A'}</p>
+                        <p className="mb-2">Material: {backpack.material ?? 'N/A'}</p>
+                        <p className="mb-2">Aesthetic: {backpack.aesthetic ?? 'N/A'}</p>
+                        {backpack.features && backpack.features.length > 0 && (
+                          <div className="mb-2">
+                            <p className="font-semibold">Features:</p>
+                            <ul className="list-disc list-inside">
+                              {backpack.features.map((feature, index) => (
+                                <li key={index}>{feature}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {backpack.pockets && backpack.pockets.length > 0 && (
+                          <div className="mb-2">
+                            <p className="font-semibold">Pockets:</p>
+                            <ul className="list-disc list-inside">
+                              {backpack.pockets.map((pocket, index) => (
+                                <li key={index}>{pocket}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               ))}
             </div>
           ) : (
