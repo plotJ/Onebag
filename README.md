@@ -1,5 +1,7 @@
 # OneBag Backpack Finder 🎒
 
+Project live at [https://onebag.world](https://onebag.world)
+
 ![OneBag Backpack Finder](project.png)
 
 ## 📚 Table of Contents
@@ -24,6 +26,10 @@ OneBag Backpack Finder is a comprehensive tool designed to help travelers find t
 - 💼 Laptop compatibility information
 - 🖼️ Visual backpack gallery
 - 📱 Responsive design for mobile and desktop
+
+## 📄 Future Development
+- Get good images for all of the backpacks
+- Add LLM chatbot feature for finding a bag
 
 ## 🛠️ Tech Stack
 
