@@ -496,7 +496,47 @@ export default function OptimizedBackpackSelector() {
                 />
               </div>
               <div>
-                {/* Backpack details */}
+                <p className="text-lg font-semibold mb-2">${selectedBackpack.price ?? 'N/A'}</p>
+                <p className="mb-2">Brand: {selectedBackpack.brand ?? 'N/A'}</p>
+                <p className="mb-2">Volume: {selectedBackpack.volume ?? 'N/A'}L</p>
+                <p className="mb-2">
+                  Weight: {useMetric
+                    ? `${selectedBackpack.weightKg ? selectedBackpack.weightKg.toFixed(2) : 'N/A'} kg`
+                    : `${selectedBackpack.weightLb ? selectedBackpack.weightLb.toFixed(2) : 'N/A'} lbs`
+                  }
+                </p>
+                <p className="mb-2">
+                  Dimensions: {useMetric
+                    ? `${selectedBackpack.heightCm ?? 'N/A'} x ${selectedBackpack.widthCm ?? 'N/A'} x ${selectedBackpack.depthCm ?? 'N/A'} cm`
+                    : `${selectedBackpack.heightIn ?? 'N/A'} x ${selectedBackpack.widthIn ?? 'N/A'} x ${selectedBackpack.depthIn ?? 'N/A'} in`
+                  }
+                </p>
+                <p className="mb-2">Carry-on Compliance: {selectedBackpack.carryOnCompliance ?? 'N/A'}%</p>
+                <p className="mb-2">Laptop Size: {selectedBackpack.laptopSize ?? 'N/A'}</p>
+                <p className="mb-2">Number of Compartments: {selectedBackpack.numCompartments ?? 'N/A'}</p>
+                <p className="mb-2">Opening Type: {selectedBackpack.openingType ?? 'N/A'}</p>
+                <p className="mb-2">Material: {selectedBackpack.material ?? 'N/A'}</p>
+                <p className="mb-2">Aesthetic: {selectedBackpack.aesthetic ?? 'N/A'}</p>
+                {selectedBackpack.features && selectedBackpack.features.length > 0 && (
+                  <div className="mb-2">
+                    <p className="font-semibold">Features:</p>
+                    <ul className="list-disc list-inside">
+                      {selectedBackpack.features.map((feature, index) => (
+                        <li key={index}>{feature}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {selectedBackpack.pockets && selectedBackpack.pockets.length > 0 && (
+                  <div className="mb-2">
+                    <p className="font-semibold">Pockets:</p>
+                    <ul className="list-disc list-inside">
+                      {selectedBackpack.pockets.map((pocket, index) => (
+                        <li key={index}>{pocket}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-4 flex justify-center">
