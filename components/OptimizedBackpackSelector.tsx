@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
+import { useRouter } from 'next/navigation'
 import { ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -55,6 +56,8 @@ export default function OptimizedBackpackSelector() {
   const [selectedBackpack, setSelectedBackpack] = useState<Backpack | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
+  const router = useRouter();
+
   // Define the filters with correct keys
   const [filters, setFilters] = useState({
     brand: 'Any',
@@ -100,12 +103,23 @@ export default function OptimizedBackpackSelector() {
   const toggleUnits = () => setUseMetric(!useMetric)
 
   const getUniqueValues = <T extends keyof Backpack>(backpacks: Backpack[], key: T): string[] => {
-    const values = backpacks.map(b => b[key]);
-    return Array.from(new Set(values.flatMap(v =>
-      typeof v === 'string' ? [v] :
-      Array.isArray(v) ? v.filter((item): item is string => typeof item === 'string') :
-      []
-    ))).filter(Boolean);
+    const values = backpacks
+      .map(b => b[key])
+      .filter((v): v is NonNullable<typeof v> => v != null);
+
+    const flatValues = values.flatMap(v => {
+      if (Array.isArray(v)) {
+        return v.filter((item): item is string => typeof item === 'string');
+      } else if (typeof v === 'string') {
+        return [v];
+      } else {
+        return [];
+      }
+    });
+
+    const uniqueValues = Array.from(new Set(flatValues));
+
+    return uniqueValues;
   };
 
   const getFeatures = (backpacks: Backpack[]): string[] => {
@@ -118,7 +132,7 @@ export default function OptimizedBackpackSelector() {
 
   const applyFilters = () => {
     return backpacks.filter(backpack => {
-      const nameMatch = backpack.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
+      const nameMatch = backpack.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? true;
 
       const price = backpack.price ?? 0;
       const volume = backpack.volume ?? 0;
@@ -456,12 +470,15 @@ export default function OptimizedBackpackSelector() {
       </div>
 
       {selectedBackpack && (
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setSelectedBackpack(null);
-          }
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              setSelectedBackpack(null);
+            }
+          }}
+        >
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>{selectedBackpack.name}</DialogTitle>
@@ -479,47 +496,16 @@ export default function OptimizedBackpackSelector() {
                 />
               </div>
               <div>
-                <p className="text-lg font-semibold mb-2">${selectedBackpack.price ?? 'N/A'}</p>
-                <p className="mb-2">Volume: {selectedBackpack.volume ?? 'N/A'}L</p>
-                <p className="mb-2">
-                  Weight: {useMetric
-                    ? `${selectedBackpack.weightKg ? selectedBackpack.weightKg.toFixed(2) : 'N/A'} kg`
-                    : `${selectedBackpack.weightLb ? selectedBackpack.weightLb.toFixed(2) : 'N/A'} lbs`
-                  }
-                </p>
-                <p className="mb-2">
-                  Dimensions: {useMetric
-                    ? `${selectedBackpack.heightCm}x${selectedBackpack.widthCm}x${selectedBackpack.depthCm} cm`
-                    : `${selectedBackpack.heightIn}x${selectedBackpack.widthIn}x${selectedBackpack.depthIn} in`
-                  }
-                </p>
-                <p className="mb-2">Carry-on Compliance: {selectedBackpack.carryOnCompliance ?? 'N/A'}%</p>
-                <p className="mb-2">Laptop Size: {selectedBackpack.laptopSize ?? 'N/A'}</p>
-                <p className="mb-2">Number of Compartments: {selectedBackpack.numCompartments ?? 'N/A'}</p>
-                <p className="mb-2">Opening Type: {selectedBackpack.openingType ?? 'N/A'}</p>
-                <p className="mb-2">Material: {selectedBackpack.material ?? 'N/A'}</p>
-                <p className="mb-2">Aesthetic: {selectedBackpack.aesthetic ?? 'N/A'}</p>
-                {selectedBackpack.features && selectedBackpack.features.length > 0 && (
-                  <div className="mb-2">
-                    <p className="font-semibold">Features:</p>
-                    <ul className="list-disc list-inside">
-                      {selectedBackpack.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {selectedBackpack.pockets && selectedBackpack.pockets.length > 0 && (
-                  <div className="mb-2">
-                    <p className="font-semibold">Pockets:</p>
-                    <ul className="list-disc list-inside">
-                      {selectedBackpack.pockets.map((pocket, index) => (
-                        <li key={index}>{pocket}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {/* Backpack details */}
               </div>
+            </div>
+            <div className="mt-4 flex justify-center">
+              <Button
+                className="bg-black text-white w-full"
+                onClick={() => router.push(`/backpack/${selectedBackpack.slug}`)}
+              >
+                View Full Details
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
